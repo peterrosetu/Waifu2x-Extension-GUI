@@ -5,37 +5,34 @@
 <h2 align="center"> Waifu2x-Extension-GUI </h2>
 
 <p align="center">
-<img src="https://img.shields.io/badge/support-Windows-blue?logo=Windows">
-<img src="https://img.shields.io/github/license/AaronFeng753/Waifu2x-Extension-GUI">
+<img src="https://img.shields.io/github/v/release/aaronfeng753/waifu2x-extension-gui?label=Latest%20release&style=flat-square&color=brightgreen">
+<img src="https://img.shields.io/badge/Support-Windows%20x64-blue?logo=Windows&style=flat-square">
+<img src="https://img.shields.io/github/license/aaronfeng753/waifu2x-extension-gui?style=flat-square&label=License">
 </p>
 
-<p align="center">
-<img src="https://img.shields.io/github/v/release/AaronFeng753/Waifu2x-Extension-GUI">
-<img src="https://img.shields.io/github/commits-since/AaronFeng753/Waifu2x-Extension-GUI/latest">
-<img src="https://img.shields.io/github/last-commit/AaronFeng753/Waifu2x-Extension-GUI">
-</p>
+#### 如果README内的图片无法正常加载,请[点击本链接查看码云内存储的README](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/blob/master/README_CN.md)或者[使用法定信道进行国际联网](http://www.cac.gov.cn/1996-02/02/c_126468621.htm)后刷新页面.
 
-<h4 align="center"> 支持的语言: English, 简体中文, 日本語(機械翻訳) </h4>
+# [下载最新版本 (Windwos x64)](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest)
+下载最新版本的完整版(或绿色版)安装包, 适用于拥有`Intel/AMD/Nvidia`显卡的`Windwos 64位`系统个人电脑.
 
-<h4 align="center"> 支持的显卡品牌: AMD, NVIDIA, Intel </h4>
+下载最新版: https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest
 
-### [下载](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest)---[Wiki 使用说明](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/wiki)---[更新日志](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Change_log_CN.md)---[捐赠](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_page.md)
+安装包内已经包含软件运行所需的所有文件, 故`无需`额外安装配置CUDA或者Caffe运行环境.
 
-#### 如果README内的图片无法正常加载,请[打开此链接查看码云内存储的README.md](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/blob/master/README_CN.md)或者[使用法定信道进行国际联网](http://www.cac.gov.cn/1996-02/02/c_126468621.htm)后刷新页面, 当然您也可以[按照这个教程来尝试修复github图片加载的问题](https://github.com/AaronFeng753/Github_dns_hosts#github_dns_hosts).
+支持的语言: English, 简体中文, 日本語(機械翻訳), 繁體中文.
+
+[点击访问Gitee(码云,中国大陆)的releases下载页面](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/releases)
+
 # Waifu2x-Extension-GUI是什么?
  借助深度卷积神经网络对`图片` & `GIF` & `视频`进行超分辨率放大(即放大与降噪).
 
 基于 `Waifu2x-ncnn-vulkan`, `SRMD-ncnn-Vulkan`,`Waifu2x-converter`和`Anime4K`. 
 
-借助waifu2x-ncnn-vulkan和SRMD-ncnn-Vulkan, Waifu2x-Extension-GUI 可以借助任何支持`Vulkan`的显卡进行运算,即便是Intel的集成显卡. 
+借助waifu2x-ncnn-vulkan和SRMD-ncnn-Vulkan, Waifu2x-Extension-GUI 可以借助任何支持`Vulkan`的显卡进行运算,包括`Intel/AMD/Nvidia`. 
 
 如果您的显卡不支持vulkan, 您还可以将引擎切换为Waifu2x-converter,同样可以很快的对图像进行放大与降噪.(已集成在release内)
 
 ![mainwindow](/Screenshot/mainwindow_cn.jpg)
-
-![processing_cn](/Screenshot/processing_cn.jpg)
-
-![addsettings](/Screenshot/addsetiings_cn.jpg)
 
 #### 已经在 `AMD` RX 550, `NVIDIA` GeForce GTX 1070 和 `Intel` UHD 620 上通过测试.
 
@@ -118,28 +115,29 @@ A：waifu2x-extension-GUI还集成了waifu2x-converter引擎, 可以借助cpu和
 处理结果:耗时11秒,放大到1920x1080
 ```
 
-# 如何修复兼容性问题 :
-#### waifu2x-ncnn-vulkan: 重装与更新显卡驱动.
-#### waifu2x-converter: 换个新电脑.
-#### Anime4k: 安装最新版的 JDK and JRE
+# [许可协议](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/LICENSE)
 
-# 集成组件(releases内):
-- waifu2x-ncnn-vulkan version 20200224
+Waifu2x-Extension-GUI遵循[GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html)许可协议.
 
-- Anime4KCPP v1.3.1
+<p align="left">
+<img src="/.github/AGPLv3_Logo.png" height="120">
+</p>
 
-- ffmpeg version 4.2.2
+# 隐私政策
 
-- gifsicle version 1.92
+我们尊重您的隐私,所以本软件的隐私政策如下:
+```
+1. 本软件不会向互联网上传任何数据, 所以我们不会收集您的任何信息, 我们甚至没有服务器.
 
-- Waifu2x-converter version: v5.3.3
+2. 本软件仅在检查更新时会连接互联网, 此时将从github(如果你在用简体中文,那么还包括码云)下载一个.ini文件.
 
-- ImageMagick 7.0.9-27-Q16-x64
-
-- SoX 14.4.2-win32
+总之, 我们不会收集您的任何信息. 如果您不信任我们, 您可以自行阅读本软件的源代码或者停止使用本软件.
+```
 
 # 鸣谢:
-- 捐赠者们: https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_list_CN.md
+- ❤捐赠者们❤
+
+- QT: https://www.qt.io/
 
 - waifu2x-ncnn-vulkan: https://github.com/nihui/waifu2x-ncnn-vulkan
 
@@ -167,11 +165,10 @@ A：waifu2x-extension-GUI还集成了waifu2x-converter引擎, 可以借助cpu和
 
 - Anime4KCPP: https://github.com/TianZerL/Anime4KCPP
 
-- Icons made by : Freepik (https://www.flaticon.com/authors/freepik) From Flaticon : https://www.flaticon.com/
+- 图标作者: Freepik (https://www.flaticon.com/authors/freepik) 来自 Flaticon : https://www.flaticon.com/
 
 # ❤ 捐赠 ❤ (推荐使用 支付宝 或者 微信)
 # [PayPal](https://www.paypal.me/aaronfeng753)
-### [捐赠列表](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_list_CN.md)
-### 除了扫码捐赠现金, 您也可以 打开支付宝首页搜“682796694”领红包并使用(比如直接把红包发给我🤣), 我也可以获得收入.
+### 除了扫码捐赠现金, 您也可以每天打开支付宝首页搜“682796694”领红包并使用, 我也可以获得收入.
 ![donate_new](/donate_new.jpg)
-#### 如果donate(捐赠)二维码图片无法正常加载,请[打开此链接查看](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/raw/master/donate_new.jpg)或者合法的连接国际网络后刷新页面, 当然您也可以[按照这个教程来尝试修复github图片加载的问题](https://github.com/AaronFeng753/Github_dns_hosts#github_dns_hosts).
+#### 如果donate(捐赠)二维码图片无法正常加载,请[打开此链接查看](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/raw/master/donate_new.jpg)或者合法的连接国际网络后刷新页面.

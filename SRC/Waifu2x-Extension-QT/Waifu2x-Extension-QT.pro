@@ -36,6 +36,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     Anime4K.cpp \
+    Current_File_Progress.cpp \
     CustomResolution.cpp \
     checkupdate.cpp \
     files.cpp \
@@ -60,7 +61,8 @@ FORMS += \
 
 TRANSLATIONS += language_English.ts \
                language_Chinese.ts \
-               language_Japanese.ts
+               language_Japanese.ts \
+               language_TraditionalChinese.ts
 
 TARGET = Waifu2x-Extension-GUI
 

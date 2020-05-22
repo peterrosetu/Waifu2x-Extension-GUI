@@ -32,34 +32,25 @@ int main(int argc, char *argv[])
 
 /*
 Change log:
-v1.71.1:
-- 新特性:用Anime4KCPP替换掉了之前的Anime4K-JAVA,Anime4KCPP与Anime4K-JAVA相比速度更快,画质更好.
-- 新特性:为Anime4K引擎添加了大量自定义设置.
-- 界面布局调整.
-- 修正翻译错误.
-- 修改部分文本.
+v2.22.01-beta:
+- 更新ImageMagick(7.0.10-13-Q16-x64)
+- 性能优化.
+- 修复bug.
+- 其他改进.
 --------------------------------------------------------------------------
 To do:
 - 多gpu支持
-- 改进剩余时间算法
-- 用python写一个视频的特殊字符路径检测(路径输入到python ext 让他看能不能判断exist)
-- 放大视频时, 判断磁盘空间够不够, 提取十个帧取平均值然后计算用量
+- 升级更新时保存设置
 ---------------------------------------------------------------------------
-完整更新日志:
-
-*/
-
-/*
 Integrated component(In releases):
-- waifu2x-ncnn-vulkan version 20200223
-- Anime4KCPP v1.3.1
+- Anime4KCPP v1.8.1
 - ffmpeg version 4.2.2
 - gifsicle version 1.92
+- waifu2x-ncnn-vulkan version 20200223
+- SRMD-ncnn-Vulkan version 20200224
 - Waifu2x-converter version: v5.3.3
-- ImageMagick 7.0.10-6-Q16-x64
+- ImageMagick 7.0.10-13-Q16-x64
 - SoX 14.4.2-win32
-*/
-
-/*
+---
 Icons made by : Freepik (https://www.flaticon.com/authors/freepik) From Flaticon : https://www.flaticon.com/
 */

@@ -2,11 +2,60 @@
 ---
 #### [中文版](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Change_log_CN.md)
 ---
+## [v2.11.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.11.3)
+#### Change log:
+- New feature: Anime4K engine supports processing Image and GIF.
+- New feature: Automatically adjust engine settings based on compatibility test results.
+- After the compatibility test, a pop up will shows up according to the test results.
+- Update Anime4K (v1.8.1).
+- Update ImageMagick (7.0.10-12-Q16-x64).
+- Change default settings.
+- Add some tips.
+- Check whether the software has write permission in the directory where the file is located before processing the file.
+- Improved permission detection when the software starts.
+- Fix bug: In special cases, the video may be stuck in the step of obtaining the duration.
+- Fix bug: Can't detect whether the software has write permission for output path normally.
+- Fix bug: when using Anime4k engine to process video, the custom resolution setting is invalid.
+---
+## [v2.02.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.02.3)
+#### Change log:
+- Update Anime4K (v1.7.0).
+- Improve Simplified Chinese support.
+- Reduce resource usage when running compatibility tests.
+- Add some tips.
+- Fix bug: In some cases, the program will get stuck when running compatibility tests.
+- Fix bug: Some components are not disabled when processing files, which may cause potential errors.
+---
+## [v2.01.1](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.01.1)
+#### Change log:
+- New feature: Redesigned user interface.
+- New feature: add [繁體中文] support (thanks @uimee for assistance in translation).
+- New feature: Anime4K engine supports specified GPU.
+- New feature: store and read GPU settings of all engines.
+- New features: improved compatibility testing, increased inspection items, and support for storing test results.
+- Update Anime4K (v1.6.0).
+- Update ImageMagick (7.0.10-10-Q16-x64).
+- Improved multi-thread management.
+- Add some tips.
+- Performance optimization.
+- Fix bugs.
+---
+## [v1.73.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v1.73.3)
+#### Change log:
+- New feature: Add GPU acceleration support for Anime4K engine.
+- New feature: After installing the software, a pop-up window allows users to choose their own language when they first start up.
+- Update Anime4K (v1.5.0)
+- It is no longer allowed to disable the automatic check for updates, but the automatic update pop-up window can be disabled. After disabling the pop-up window, an update prompt will be displayed in the text box.
+- A pop-up window prompts the user to view the test results after the compatibility test.
+- Improve compatibility test.
+- Hide ETA and remaining time when GIF or video is included in the file list.
+- Improve multi-language support.
+- Fix bugs.
+---
 ## [v1.71.1](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v1.71.1)
 #### Change log:
 - New feature: replaced the previous Anime4K-JAVA with Anime4KCPP.Anime4KCPP is faster and has better image quality than Anime4K-JAVA.
 - New feature: Add a lot of custom settings for the Anime4K engine.
-![en](https://raw.githubusercontent.com/AaronFeng753/Waifu2x-Extension-GUI/master/.github/temp/anime4kSettings_en.jpg)
 - Interface layout adjustment.
 - Fixe translation errors.
 - Modify some texts.

@@ -5,48 +5,43 @@
 <h2 align="center"> Waifu2x-Extension-GUI </h2>
 
 <p align="center">
-<img src="https://img.shields.io/badge/support-Windows-blue?logo=Windows">
-<img src="https://img.shields.io/github/license/AaronFeng753/Waifu2x-Extension-GUI">
+<img src="https://img.shields.io/github/v/release/aaronfeng753/waifu2x-extension-gui?label=Latest%20release&style=flat-square&color=brightgreen">
+<img src="https://img.shields.io/badge/Support-Windows%20x64-blue?logo=Windows&style=flat-square">
+<img src="https://img.shields.io/github/license/aaronfeng753/waifu2x-extension-gui?style=flat-square&label=License">
 </p>
-
-<p align="center">
-<img src="https://img.shields.io/github/v/release/AaronFeng753/Waifu2x-Extension-GUI">
-<img src="https://img.shields.io/github/commits-since/AaronFeng753/Waifu2x-Extension-GUI/latest">
-<img src="https://img.shields.io/github/last-commit/AaronFeng753/Waifu2x-Extension-GUI">
-</p>
-
-<h4 align="center"> Supported Language: English, 简体中文, 日本語(機械翻訳) </h4>
-
-<h4 align="center"> Supported graphics card brands: AMD, NVIDIA, Intel </h4>
 
 ### [中文版说明文档](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/README_CN.md#waifu2x-extension-gui)
-### [Download](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest)---[Wiki](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/wiki)---[Change log](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Change_log.md)---[Donate](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_page.md)
+
+# [Download Latest Build (Windows x64)](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest)
+Download Latest installation (or portable) package for `Windows x64` PCs with `Intel/AMD/Nvidia` GPUs.
+
+Download Latest Build: https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest
+
+This package includes all the binaries and models required, so no CUDA or Caffe runtime environment is needed.
+
+Supported Language: English, 简体中文, 日本語(機械翻訳), 繁體中文.
 
 # What is Waifu2x-Extension-GUI?
 `Image` & `GIF` & `Video` Super-Resolution using Deep Convolutional Neural Networks.
 
 Based on `Waifu2x-ncnn-vulkan`,`SRMD-ncnn-Vulkan`,`Waifu2x-converter` and `Anime4K`. 
 
-Thanks to waifu2x-ncnn-vulkan & SRMD-ncnn-Vulkan, Waifu2x-Extension-GUI could use any kind of gpu that support `Vulkan`, even Intel GPU. 
+Thanks to waifu2x-ncnn-vulkan & SRMD-ncnn-Vulkan, Waifu2x-Extension-GUI could use any kind of gpu that supports `Vulkan`, including `Intel/AMD/Nvidia` GPUs. 
 
-If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also intergrated into the Waifu2x-Extension-GUI.
+If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also intergrated into Waifu2x-Extension-GUI.
 
 ![mainwindow](/Screenshot/mainwindow.jpg)
 
-![processing](/Screenshot/processing.jpg)
-
-![addsettings](/Screenshot/addsetiings.jpg)
-
-#### Already been tested on `AMD` RX 550, `NVIDIA` GeForce GTX 1070 and `Intel` UHD 620.
+#### Already been tested on the `AMD` RX 550, `NVIDIA` GeForce GTX 1070 and `Intel` UHD 620.
 
 # Features
 - Easy to use graphical user interface
-- Support batch processing of still pictures, gifs and videos
+- Supports batch processing of still pictures, gifs and videos
 - Supports anime style and 3D realistic style images (that is, supports all image styles)
-- Integrated multiple engines, strong hardware compatibility, support for computing with NVIDIA, Intel, AMD
+- Multiple integrated engines, strong hardware compatibility and support for NVIDIA, Intel and AMD GPUs
 - Unlimited scale ratio
 - Custom output resolution (support pictures & GIF & video)
-- Audio denoise.(for video)
+- Audio denoising for video
 - Flexible multi-thread management
 - Processing video in segments, greatly reducing the hard disk space occupied when processing video.
 - Support to save enlarged and noise-reduced pictures as .jpg and automatically perform lossless compression
@@ -59,7 +54,7 @@ If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also
 
 # Samples
 
-`All of these samples were processed using Waifu2x-ncnn-vulkan engine.`
+`All of these samples were processed using the Waifu2x-ncnn-vulkan engine.`
 
 ### **`Image`** : https://github.com/AaronFeng753/Waifu2x-Extension-GUI/tree/master/Samples/image
 
@@ -67,7 +62,7 @@ If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also
 
 ### **`GIF`** : https://github.com/AaronFeng753/Waifu2x-Extension-GUI/tree/master/Samples/gif
 
-#### Original 2D Anime Imgae 480x300 (.jpg 93.2 KB):
+#### Original 2D Anime Image 480x300 (.jpg 93.2 KB):
 ![Original Imgae](/Samples/image/Original_[480x300].jpg)
 
 #### After 8x magnification, level 3 denoise and compress 3840x2400 (.jpg 525 KB):
@@ -76,7 +71,7 @@ If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also
 #### Comparison
 ![Comparison](/Samples/image/Comparison.png)
 
-#### Original 3D Real-life Imgae 800x535 (.jpg 81.4 KB):
+#### Original 3D Real-life Image 800x535 (.jpg 81.4 KB):
 ![Original Imgae](/Samples/image/deer.jpg)
 
 #### After 4x magnification, level 2 denoise and compress 3200x2140 (.jpg 881 KB):
@@ -94,33 +89,32 @@ If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also
 #### After 2x magnification, level 2 denoise and gif optimize 1000 x 744 (3.77 MB):
 ![Original GIF](/Samples/gif/2_waifu2x_compressed.gif)
 
-### `Github doesn't support play video online, pls check link below:`
+### `Github doesn't online video playback, please check link below:`
 ### **`Video`** : https://github.com/AaronFeng753/Waifu2x-Extension-GUI/tree/master/Samples/video
 
-# How to fix compatibility issue :
-#### waifu2x-ncnn-vulkan: Re-install gpu driver or update it to the latest.
-#### waifu2x-converter: Buy a new computer.
-#### Anime4k: Install the latest JDK and JRE
+# [License](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/LICENSE)
 
-# Integrated component(In releases):
-- waifu2x-ncnn-vulkan version 20200224
+Waifu2x-Extension-GUI is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
 
-- SRMD-ncnn-Vulkan version 20200224
+<p align="left">
+<img src="/.github/AGPLv3_Logo.png" height="120">
+</p>
 
-- Anime4KCPP v1.3.1
+# Privacy policy
 
-- ffmpeg version 4.2.2
+We respect your privacy, so the following is the privacy policy of this software:
+```
+1. This software won't upload anything to the internet, so we won't collect any data from you, we even don't have a server.
 
-- gifsicle version 1.92
+2. This sofware will only connect to the internet when check for new update, which will download an .ini file from github (and gitee if you are using Simplified Chinese).
 
-- Waifu2x-converter version: v5.3.3
-
-- ImageMagick 7.0.9-27-Q16-x64
-
-- SoX 14.4.2-win32
+In conclusion, we won't collect any data from you. If you don't trust us, you can read the source code yourself or stop using this software.
+```
 
 # Credits:
-- Donors: https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_list.md
+- ❤All donors❤
+
+- QT: https://www.qt.io/
 
 - waifu2x-ncnn-vulkan: https://github.com/nihui/waifu2x-ncnn-vulkan
 
@@ -150,9 +144,10 @@ If your gpu doesn't support vulkan, you can use Waifu2x-converter, which is also
 
 - Icons made by : Freepik (https://www.flaticon.com/authors/freepik) From Flaticon : https://www.flaticon.com/
 
+- Special thanks to @Nova-Aurora for fix several errors in the English README.
+
 # ❤ Donate ❤ (推荐使用 支付宝 或者 微信)
 # [PayPal](https://www.paypal.me/aaronfeng753)
-### [Donation list](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_list.md)
-### 除了扫码捐赠现金, 您也可以 打开支付宝首页搜“682796694”领红包并使用(比如直接把红包发给我🤣), 我也可以获得收入.
+### 除了扫码捐赠现金, 您也可以每天打开支付宝首页搜“682796694”领红包并使用, 我也可以获得收入.
 ![donate_new](/donate_new.jpg)
 #### 如果donate(捐赠)二维码图片无法正常加载,请[打开此链接查看](https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/raw/master/donate_new.jpg)或者合法的连接国际网络后刷新页面, 当然您也可以[按照这个教程来尝试修复github图片加载的问题](https://github.com/AaronFeng753/Github_dns_hosts#github_dns_hosts).

@@ -26,15 +26,16 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     //==============
+    this->setWindowTitle("Waifu2x-Extension-GUI "+VERSION+" by Aaron Feng");
+    //==============
     translator = new QTranslator(this);
     //==============
-    ui->tabWidget->setCurrentIndex(0);//显示home tab
-    on_tabWidget_currentChanged(0);
-    ui->tabWidget_videoSettings->setCurrentIndex(0);
-    ui->toolBox_engines->setCurrentIndex(0);
-    TextBrowser_StartMes();//显示启动msg
+    ui->tabWidget->setCurrentIndex(1);//显示home tab
+    on_tabWidget_currentChanged(1);
+    ui->tabWidget_Engines->setCurrentIndex(0);
     this->setAcceptDrops(true);//mainwindow接收drop
     Init_Table();//初始化table
+    ui->groupBox_CurrentFile->setVisible(0);//隐藏当前文件进度
     //=================== 初始隐藏所有table和按钮 ======================
     ui->tableView_image->setVisible(0);
     ui->tableView_gif->setVisible(0);
@@ -72,7 +73,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(Send_Waifu2x_DetectGPU_finished()), this, SLOT(Waifu2x_DetectGPU_finished()));
     connect(this, SIGNAL(Send_CheckUpadte_NewUpdate(QString,QString)), this, SLOT(CheckUpadte_NewUpdate(QString,QString)));
     connect(this, SIGNAL(Send_SystemShutDown()), this, SLOT(SystemShutDown()));
-    connect(this, SIGNAL(Send_Donate_Notification()), this, SLOT(Donate_Notification()));
     connect(this, SIGNAL(Send_Waifu2x_DumpProcessorList_converter_finished()), this, SLOT(Waifu2x_DumpProcessorList_converter_finished()));
     connect(this, SIGNAL(Send_Read_urls_finfished()), this, SLOT(Read_urls_finfished()));
     connect(this, SIGNAL(Send_SRMD_DetectGPU_finished()), this, SLOT(SRMD_DetectGPU_finished()));
@@ -80,6 +80,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(Send_video_write_VideoConfiguration(QString,int,int,bool,int,int,QString,bool,QString,QString)), this, SLOT(video_write_VideoConfiguration(QString,int,int,bool,int,int,QString,bool,QString,QString)));
     connect(this, SIGNAL(Send_Settings_Save()), this, SLOT(Settings_Save()));
     connect(this, SIGNAL(Send_video_write_Progress_ProcessBySegment(QString,int,bool,bool)), this, SLOT(video_write_Progress_ProcessBySegment(QString,int,bool,bool)));
+    //================== 处理当前文件的进度 =========================
+    connect(this, SIGNAL(Send_CurrentFileProgress_Start(QString,int)), this, SLOT(CurrentFileProgress_Start(QString,int)));
+    connect(this, SIGNAL(Send_CurrentFileProgress_Stop()), this, SLOT(CurrentFileProgress_Stop()));
+    connect(this, SIGNAL(Send_CurrentFileProgress_progressbar_Add()), this, SLOT(CurrentFileProgress_progressbar_Add()));
+    connect(this, SIGNAL(Send_CurrentFileProgress_progressbar_Add_SegmentDuration(int)), this, SLOT(CurrentFileProgress_progressbar_Add_SegmentDuration(int)));
     //======
     TimeCostTimer = new QTimer();
     connect(TimeCostTimer, SIGNAL(timeout()), this, SLOT(TimeSlot()));
@@ -91,9 +96,22 @@ MainWindow::MainWindow(QWidget *parent)
     AutoUpdate = QtConcurrent::run(this, &MainWindow::CheckUpadte_Auto);//自动检查更新线程
     SystemShutDown_isAutoShutDown();//上次是否自动关机
     Donate_Count();//捐赠统计
+    //====================================
+    TextBrowser_StartMes();//显示启动msg
     //===================================
     Tip_FirstTimeStart();
-    //===================================
+    //==============
+    /*
+    校验软件是否对所在目录有写权限
+    */
+    if(file_isDirWritable(Current_Path)==false)
+    {
+        QMessageBox Msg_Permission(QMessageBox::Question, QString(tr("Error")), QString(tr("It is detected that this software lacks the necessary permissions to run.\n\nPlease close this software and start this software again after giving this software administrator permission.\n\nOtherwise, this software may not work properly.")));
+        Msg_Permission.setIcon(QMessageBox::Warning);
+        QAbstractButton *pBtn_Permission = (QAbstractButton *)Msg_Permission.addButton(QString("OK"), QMessageBox::NoRole);
+        Msg_Permission.exec();
+    }
+    //==============
     this->adjustSize();
 }
 
@@ -209,35 +227,74 @@ int MainWindow::Force_close()
 void MainWindow::TimeSlot()
 {
     TimeCost++;
+    //====================总进度==================
     QString TimeCostStr = tr("Time cost:[")+Seconds2hms(TimeCost)+"]";
     ui->label_TimeCost->setText(TimeCostStr);
-    int TaskNumFinished_tmp = TaskNumFinished;
-    long unsigned int TimeCost_tmp = TimeCost;
-    int TaskNumTotal_tmp = TaskNumTotal;
-    if(TaskNumFinished_tmp>0&&TimeCost_tmp>0&&TaskNumTotal_tmp>0)
+    if(ui->label_TimeRemain_CurrentFile->isVisible())
     {
-        if(NewTaskFinished)
+        int TaskNumFinished_tmp = TaskNumFinished;
+        long unsigned int TimeCost_tmp = TimeCost;
+        int TaskNumTotal_tmp = TaskNumTotal;
+        if(TaskNumFinished_tmp>0&&TimeCost_tmp>0&&TaskNumTotal_tmp>0)
         {
-            NewTaskFinished=false;
-            long unsigned int avgTimeCost = TimeCost/TaskNumFinished_tmp;
-            ETA = int(avgTimeCost*(TaskNumTotal_tmp-TaskNumFinished_tmp));
-        }
-        else
-        {
-            if(ETA>1)
+            if(NewTaskFinished)
             {
-                ETA--;
+                NewTaskFinished=false;
+                long unsigned int avgTimeCost = TimeCost_tmp/TaskNumFinished_tmp;
+                ETA = int(avgTimeCost*(TaskNumTotal_tmp-TaskNumFinished_tmp));
             }
+            else
+            {
+                if(ETA>1)
+                {
+                    ETA--;
+                }
+            }
+            QString TimeRemainingStr = tr("Time remaining:[")+Seconds2hms(ETA)+"]";
+            ui->label_TimeRemain->setText(TimeRemainingStr);
+            QDateTime time = QDateTime::currentDateTime();
+            long unsigned int Time_t = time.toTime_t();
+            Time_t+=ETA;
+            time = QDateTime::fromTime_t(Time_t);
+            QString Current_Time = time.toString("hh:mm:ss");
+            QString ETA_str = "ETA:["+Current_Time+"]";
+            ui->label_ETA->setText(ETA_str);
         }
-        QString TimeRemainingStr = tr("Time remaining:[")+Seconds2hms(ETA)+"]";
-        ui->label_TimeRemain->setText(TimeRemainingStr);
-        QDateTime time = QDateTime::currentDateTime();
-        long unsigned int Time_t = time.toTime_t();
-        Time_t+=ETA;
-        time = QDateTime::fromTime_t(Time_t);
-        QString Current_Time = time.toString("hh:mm:ss");
-        QString ETA_str = "ETA:["+Current_Time+"]";
-        ui->label_ETA->setText(ETA_str);
+    }
+    //====================当前文件=================
+    if(isStart_CurrentFile)
+    {
+        TimeCost_CurrentFile++;
+        QString TimeCostStr_CurrentFile = tr("Time cost:[")+Seconds2hms(TimeCost_CurrentFile)+"]";
+        ui->label_TimeCost_CurrentFile->setText(TimeCostStr_CurrentFile);
+        int TaskNumFinished_tmp_CurrentFile = TaskNumFinished_CurrentFile;
+        long unsigned int TimeCost_tmp_CurrentFile = TimeCost_CurrentFile;
+        int TaskNumTotal_tmp_CurrentFile = TaskNumTotal_CurrentFile;
+        if(TaskNumFinished_tmp_CurrentFile>0&&TimeCost_tmp_CurrentFile>0&&TaskNumTotal_tmp_CurrentFile>0)
+        {
+            if(NewTaskFinished_CurrentFile)
+            {
+                NewTaskFinished_CurrentFile=false;
+                long unsigned int avgTimeCost_CurrentFile = TimeCost_tmp_CurrentFile/TaskNumFinished_tmp_CurrentFile;
+                ETA_CurrentFile = int(avgTimeCost_CurrentFile*(TaskNumTotal_tmp_CurrentFile-TaskNumFinished_tmp_CurrentFile));
+            }
+            else
+            {
+                if(ETA_CurrentFile>1)
+                {
+                    ETA_CurrentFile--;
+                }
+            }
+            QString TimeRemainingStr_CurrentFile = tr("Time remaining:[")+Seconds2hms(ETA_CurrentFile)+"]";
+            ui->label_TimeRemain_CurrentFile->setText(TimeRemainingStr_CurrentFile);
+            QDateTime time_CurrentFile = QDateTime::currentDateTime();
+            long unsigned int Time_t_CurrentFile = time_CurrentFile.toTime_t();
+            Time_t_CurrentFile+=ETA_CurrentFile;
+            time_CurrentFile = QDateTime::fromTime_t(Time_t_CurrentFile);
+            QString Current_Time_CurrentFile = time_CurrentFile.toString("hh:mm:ss");
+            QString ETA_str_CurrentFile = "ETA:["+Current_Time_CurrentFile+"]";
+            ui->label_ETA_CurrentFile->setText(ETA_str_CurrentFile);
+        }
     }
 }
 QString MainWindow::Seconds2hms(long unsigned int seconds)
@@ -295,6 +352,14 @@ void MainWindow::on_pushButton_Start_clicked()
         tmp = tmp.trimmed();
         if(tmp=="")
         {
+            //=====
+            QMessageBox *MSG = new QMessageBox();
+            MSG->setWindowTitle(tr("Error"));
+            MSG->setText(tr("Output path is empty."));
+            MSG->setIcon(QMessageBox::Warning);
+            MSG->setModal(true);
+            MSG->show();
+            //=====
             emit Send_TextBrowser_NewMessage(tr("Output path is empty."));
             return;
         }
@@ -306,12 +371,20 @@ void MainWindow::on_pushButton_Start_clicked()
             tmp = tmp.left(tmp.length() - 1);
         }
         QFileInfo fileinfo_tmp(tmp);
-        if(file_isDirExist(tmp)&&fileinfo_tmp.isDir()&&fileinfo_tmp.isWritable())
+        if(file_isDirExist(tmp)&&fileinfo_tmp.isDir()&&file_isDirWritable(tmp))
         {
             OutPutFolder_main = tmp;
         }
         else
         {
+            //=====
+            QMessageBox *MSG = new QMessageBox();
+            MSG->setWindowTitle(tr("Error"));
+            MSG->setText(tr("Invalid output path.\n\nOr do not have sufficient permissions to write files to the output path, you might need to grant administrator permissions to this software."));
+            MSG->setIcon(QMessageBox::Warning);
+            MSG->setModal(true);
+            MSG->show();
+            //=====
             emit Send_TextBrowser_NewMessage(tr("Invalid output path."));
             return;
         }
@@ -325,6 +398,17 @@ void MainWindow::on_pushButton_Start_clicked()
     }
     else
     {
+        //============== 判断是否需要隐藏ETA和剩余时间 ================
+        if(Table_model_gif->rowCount()!=0||Table_model_video->rowCount()!=0)
+        {
+            ui->label_TimeRemain->setVisible(0);
+            ui->label_ETA->setVisible(0);
+        }
+        else
+        {
+            ui->label_TimeRemain->setVisible(1);
+            ui->label_ETA->setVisible(1);
+        }
         //============== 数值初始化 ==================
         waifu2x_STOP = false;
         waifu2x_STOP_confirm = false;
@@ -340,7 +424,6 @@ void MainWindow::on_pushButton_Start_clicked()
         this->setAcceptDrops(0);//禁止drop file
         ui->pushButton_Stop->setEnabled(1);//启用stop button
         ui->pushButton_Start->setEnabled(0);//禁用start button
-        ui->groupBox_Input->setEnabled(0);
         ui->groupBox_OutPut->setEnabled(0);
         ui->pushButton_ClearList->setEnabled(0);
         ui->pushButton_RemoveItem->setEnabled(0);
@@ -368,6 +451,7 @@ void MainWindow::on_pushButton_Start_clicked()
         ui->groupBox_AudioDenoise->setEnabled(0);
         ui->checkBox_ProcessVideoBySegment->setEnabled(0);
         ui->spinBox_SegmentDuration->setEnabled(0);
+        ui->comboBox_ImageStyle->setEnabled(0);
         //==========
         TimeCost=0;
         TimeCostTimer->start(1000);
@@ -418,12 +502,14 @@ int MainWindow::on_pushButton_RemoveItem_clicked()
         ui->tableView_image->clearSelection();
         ui->tableView_gif->clearSelection();
         ui->tableView_video->clearSelection();
+        //=====
         QMessageBox *MSG = new QMessageBox();
         MSG->setWindowTitle(tr("Warning"));
         MSG->setText(tr("No items are currently selected."));
         MSG->setIcon(QMessageBox::Warning);
         MSG->setModal(true);
         MSG->show();
+        //=====
         ui->pushButton_RemoveItem->setEnabled(1);
         return 0;
     }
@@ -588,17 +674,6 @@ void MainWindow::on_checkBox_SaveAsJPG_stateChanged(int arg1)
     }
 }
 
-void MainWindow::on_pushButton_donate_clicked()
-{
-    emit Send_TextBrowser_NewMessage(tr("Thank you! :)"));
-    QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_page.md"));
-    if(ui->comboBox_language->currentIndex()==1)
-    {
-        QDesktopServices::openUrl(QUrl("https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/blob/master/Donate_page.md"));
-    }
-    ui->tabWidget->setCurrentIndex(1);
-}
-
 void MainWindow::on_pushButton_Report_clicked()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/issues/new"));
@@ -616,64 +691,8 @@ void MainWindow::on_pushButton_ReadMe_clicked()
         QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/README.md"));
     }
 }
-/*
-添加手动输入路径
-*/
-void MainWindow::on_pushButton_AddPath_clicked()
-{
-    QString Input_path = ui->lineEdit_inputPath->text();
-    Input_path = Input_path.trimmed();
-    if(Input_path=="")return;
-    Input_path = Input_path.replace("\\","/");
-    Input_path = Input_path.replace("\\\\","/");
-    Input_path = Input_path.replace("//","/");
-    if(Input_path.right(1)=="/")
-    {
-        Input_path = Input_path.left(Input_path.length() - 1);
-    }
-    if(QFile::exists(Input_path))
-    {
-        AddNew_gif=false;
-        AddNew_image=false;
-        AddNew_video=false;
-        //================== 界面管制 ========================
-        ui->groupBox_Input->setEnabled(0);
-        ui->groupBox_Setting->setEnabled(0);
-        ui->groupBox_FileList->setEnabled(0);
-        ui->pushButton_Start->setEnabled(0);
-        ui->groupBox_InputExt->setEnabled(0);
-        this->setAcceptDrops(0);
-        ui->label_DropFile->setText(tr("Adding files, please wait."));
-        emit Send_TextBrowser_NewMessage(tr("Adding files, please wait."));
-        //===================================================
-        QtConcurrent::run(this, &MainWindow::Read_Path, Input_path);
-    }
-    else
-    {
-        QMessageBox *MSG = new QMessageBox();
-        MSG->setWindowTitle(tr("Error"));
-        MSG->setText(tr("Input path does not exist."));
-        MSG->setIcon(QMessageBox::Warning);
-        MSG->setModal(false);
-        MSG->show();
-        return;
-    }
-}
-/*
-通过输入路径添加文件-的读取文件线程
-*/
-void MainWindow::Read_Path(QString Input_path)
-{
-    if(ui->checkBox_ScanSubFolders->checkState())
-    {
-        Add_File_Folder_IncludeSubFolder(Input_path);
-    }
-    else
-    {
-        Add_File_Folder(Input_path);
-    }
-    emit Send_Read_urls_finfished();
-}
+
+
 
 void MainWindow::on_comboBox_Engine_Image_currentIndexChanged(int index)
 {
@@ -686,7 +705,7 @@ void MainWindow::on_comboBox_Engine_Image_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_image->setEnabled(1);
                 ui->spinBox_DenoiseLevel_image->setToolTip(tr("Range:-1(No noise reduction)~3"));
                 ui->label_ImageDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~3"));
-                return;
+                break;
             }
         case 1:
             {
@@ -695,7 +714,7 @@ void MainWindow::on_comboBox_Engine_Image_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_image->setEnabled(1);
                 ui->spinBox_DenoiseLevel_image->setToolTip(tr("Range:0(No noise reduction)~3"));
                 ui->label_ImageDenoiseLevel->setToolTip(tr("Range:0(No noise reduction)~3"));
-                return;
+                break;
             }
         case 2:
             {
@@ -704,9 +723,19 @@ void MainWindow::on_comboBox_Engine_Image_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_image->setEnabled(1);
                 ui->spinBox_DenoiseLevel_image->setToolTip(tr("Range:-1(No noise reduction)~10"));
                 ui->label_ImageDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~10"));
-                return;
+                break;
+            }
+        case 3:
+            {
+                ui->spinBox_DenoiseLevel_image->setRange(-1,0);
+                ui->spinBox_DenoiseLevel_image->setValue(-1);
+                ui->spinBox_DenoiseLevel_image->setEnabled(0);
+                ui->spinBox_DenoiseLevel_image->setToolTip(tr("Anime4K engine does not support noise reduction."));
+                ui->label_ImageDenoiseLevel->setToolTip(tr("Anime4K engine does not support noise reduction."));
+                break;
             }
     }
+    on_comboBox_model_vulkan_currentIndexChanged(0);
 }
 
 void MainWindow::on_comboBox_Engine_GIF_currentIndexChanged(int index)
@@ -720,7 +749,7 @@ void MainWindow::on_comboBox_Engine_GIF_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_gif->setEnabled(1);
                 ui->spinBox_DenoiseLevel_gif->setToolTip(tr("Range:-1(No noise reduction)~3"));
                 ui->label_GIFDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~3"));
-                return;
+                break;
             }
         case 1:
             {
@@ -729,7 +758,7 @@ void MainWindow::on_comboBox_Engine_GIF_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_gif->setEnabled(1);
                 ui->spinBox_DenoiseLevel_gif->setToolTip(tr("Range:0(No noise reduction)~3"));
                 ui->label_GIFDenoiseLevel->setToolTip(tr("Range:0(No noise reduction)~3"));
-                return;
+                break;
             }
         case 2:
             {
@@ -738,9 +767,19 @@ void MainWindow::on_comboBox_Engine_GIF_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_gif->setEnabled(1);
                 ui->spinBox_DenoiseLevel_gif->setToolTip(tr("Range:-1(No noise reduction)~10"));
                 ui->label_GIFDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~10"));
-                return;
+                break;
+            }
+        case 3:
+            {
+                ui->spinBox_DenoiseLevel_gif->setRange(-1,0);
+                ui->spinBox_DenoiseLevel_gif->setValue(-1);
+                ui->spinBox_DenoiseLevel_gif->setEnabled(0);
+                ui->spinBox_DenoiseLevel_gif->setToolTip(tr("Anime4K engine does not support noise reduction."));
+                ui->label_GIFDenoiseLevel->setToolTip(tr("Anime4K engine does not support noise reduction."));
+                break;
             }
     }
+    on_comboBox_model_vulkan_currentIndexChanged(0);
 }
 
 void MainWindow::on_comboBox_Engine_Video_currentIndexChanged(int index)
@@ -754,7 +793,7 @@ void MainWindow::on_comboBox_Engine_Video_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_video->setEnabled(1);
                 ui->spinBox_DenoiseLevel_video->setToolTip(tr("Range:-1(No noise reduction)~3"));
                 ui->label_VideoDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~3"));
-                return;
+                break;
             }
         case 1:
             {
@@ -763,7 +802,7 @@ void MainWindow::on_comboBox_Engine_Video_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_video->setEnabled(1);
                 ui->spinBox_DenoiseLevel_video->setToolTip(tr("Range:0(No noise reduction)~3"));
                 ui->label_VideoDenoiseLevel->setToolTip(tr("Range:0(No noise reduction)~3"));
-                return;
+                break;
             }
         case 2:
             {
@@ -772,7 +811,7 @@ void MainWindow::on_comboBox_Engine_Video_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_video->setEnabled(0);
                 ui->spinBox_DenoiseLevel_video->setToolTip(tr("Anime4K engine does not support noise reduction."));
                 ui->label_VideoDenoiseLevel->setToolTip(tr("Anime4K engine does not support noise reduction."));
-                return;
+                break;
             }
         case 3:
             {
@@ -781,9 +820,10 @@ void MainWindow::on_comboBox_Engine_Video_currentIndexChanged(int index)
                 ui->spinBox_DenoiseLevel_video->setEnabled(1);
                 ui->spinBox_DenoiseLevel_video->setToolTip(tr("Range:-1(No noise reduction)~10"));
                 ui->label_VideoDenoiseLevel->setToolTip(tr("Range:-1(No noise reduction)~10"));
-                return;
+                break;
             }
     }
+    on_comboBox_model_vulkan_currentIndexChanged(0);
 }
 
 void MainWindow::on_pushButton_clear_textbrowser_clicked()
@@ -801,15 +841,13 @@ void MainWindow::on_spinBox_textbrowser_fontsize_valueChanged(int arg1)
 
 void MainWindow::on_pushButton_compatibilityTest_clicked()
 {
-    ui->pushButton_Start->setEnabled(0);
+    ui->tab_Home->setEnabled(0);
+    ui->tab_EngineSettings->setEnabled(0);
+    ui->tab_VideoSettings->setEnabled(0);
+    ui->tab_AdditionalSettings->setEnabled(0);
     ui->pushButton_compatibilityTest->setEnabled(0);
-    ui->pushButton_DetectGPU->setEnabled(0);
-    ui->pushButton_DetectGPUID_srmd->setEnabled(0);
-    ui->pushButton_DumpProcessorList_converter->setEnabled(0);
-    if(!ui->textBrowser->isVisible())
-    {
-        on_pushButton_HideTextBro_clicked();
-    }
+    ui->tabWidget->setCurrentIndex(5);
+    ui->pushButton_compatibilityTest->setText(tr("Testing, please wait..."));
     QtConcurrent::run(this, &MainWindow::Waifu2x_Compatibility_Test);
 }
 
@@ -841,22 +879,6 @@ void MainWindow::on_pushButton_HideSettings_clicked()
     }
 }
 
-void MainWindow::on_pushButton_HideInput_clicked()
-{
-    if(ui->groupBox_Input->isVisible())
-    {
-        ui->groupBox_OutPut->setVisible(0);
-        ui->groupBox_Input->setVisible(0);
-        ui->pushButton_HideInput->setText(tr("Show Path Settings"));
-    }
-    else
-    {
-        ui->groupBox_OutPut->setVisible(1);
-        ui->groupBox_Input->setVisible(1);
-        ui->pushButton_HideInput->setText(tr("Hide Path Settings"));
-    }
-}
-
 /*
 改变语言设置
 */
@@ -881,6 +903,11 @@ void MainWindow::on_comboBox_language_currentIndexChanged(int index)
                 qmFilename = runPath + "/language_Japanese.qm";
                 break;
             }
+        case 3:
+            {
+                qmFilename = runPath + "/language_TraditionalChinese.qm";
+                break;
+            }
     }
     if (translator->load(qmFilename))
     {
@@ -889,11 +916,12 @@ void MainWindow::on_comboBox_language_currentIndexChanged(int index)
         Table_FileCount_reload();
         Init_Table();
         Set_Font_fixed();
-        ui->groupBox_OutPut->setVisible(1);
-        ui->groupBox_Input->setVisible(1);
         ui->groupBox_Setting->setVisible(1);
         ui->textBrowser->setVisible(1);
-        this->adjustSize();
+        if(this->windowState()!=Qt::WindowMaximized)
+        {
+            this->adjustSize();
+        }
     }
     else
     {
@@ -914,7 +942,6 @@ void MainWindow::on_pushButton_SaveFileList_clicked()
     }
     this->setAcceptDrops(0);//禁止drop file
     ui->pushButton_Start->setEnabled(0);//禁用start button
-    ui->groupBox_Input->setEnabled(0);
     ui->pushButton_ClearList->setEnabled(0);
     ui->pushButton_RemoveItem->setEnabled(0);
     ui->checkBox_ReProcFinFiles->setEnabled(0);
@@ -934,7 +961,6 @@ void MainWindow::on_pushButton_ReadFileList_clicked()
     {
         this->setAcceptDrops(0);//禁止drop file
         ui->pushButton_Start->setEnabled(0);//禁用start button
-        ui->groupBox_Input->setEnabled(0);
         ui->pushButton_ClearList->setEnabled(0);
         ui->pushButton_RemoveItem->setEnabled(0);
         ui->checkBox_ReProcFinFiles->setEnabled(0);
@@ -986,7 +1012,6 @@ int MainWindow::Donate_Count()
         configIniWrite->setValue("/Donate/VERSION", VERSION);
         configIniWrite->setValue("/Donate/OpenCount_Current", 1);
         configIniWrite->setValue("/Donate/OpenCount_Max", 5);
-        configIniWrite->setValue("/Donate/OFF", 0);
         return 0;
     }
     else
@@ -1001,12 +1026,10 @@ int MainWindow::Donate_Count()
             configIniWrite->setValue("/Donate/VERSION", VERSION);
             configIniWrite->setValue("/Donate/OpenCount_Current", 1);
             configIniWrite->setValue("/Donate/OpenCount_Max", 5);
-            configIniWrite->setValue("/Donate/OFF", 0);
             return 0;
         }
     }
     QSettings *configIniRead = new QSettings(donate_ini, QSettings::IniFormat);
-    if(configIniRead->value("/Donate/OFF").toInt()==1)return 0;
     //=======  读取打开次数  ======
     int OpenCount_Current = configIniRead->value("/Donate/OpenCount_Current").toInt();
     int OpenCount_Max = configIniRead->value("/Donate/OpenCount_Max").toInt();
@@ -1021,47 +1044,9 @@ int MainWindow::Donate_Count()
     {
         QSettings *configIniWrite = new QSettings(donate_ini, QSettings::IniFormat);
         configIniWrite->setValue("/Donate/OpenCount_Current", 1);
-        configIniWrite->setValue("/Donate/OpenCount_Max", 30);//间隔多少次弹出一次捐赠提示
-        QtConcurrent::run(this, &MainWindow::Donate_watchdog);
+        configIniWrite->setValue("/Donate/OpenCount_Max", 10);//间隔多少次,提示捐赠
+        ui->tabWidget->setCurrentIndex(0);
         return 0;
-    }
-}
-
-int MainWindow::Donate_watchdog()
-{
-    Delay_sec_sleep(5);
-    emit Send_Donate_Notification();
-    return 0;
-}
-
-int MainWindow::Donate_Notification()
-{
-    QMessageBox Msg(QMessageBox::Question, QString(tr("Notification")), QString(tr("Do you like this software?\n\nIf you like this software, please donate to support the developers to ensure the software is continuously updated.\n\nThank you!")));
-    Msg.setModal(false);
-    Msg.setIcon(QMessageBox::Information);
-    QAbstractButton *pYesBtn = (QAbstractButton *)Msg.addButton(QString(tr("YES")), QMessageBox::YesRole);
-    QAbstractButton *pNoBtn = (QAbstractButton *)Msg.addButton(QString(tr("NO")), QMessageBox::NoRole);
-    Msg.exec();
-    if (Msg.clickedButton() == pYesBtn)
-    {
-        ui->tabWidget->setCurrentIndex(1);
-        QDesktopServices::openUrl(QUrl("https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/blob/master/Donate_page.md"));
-        QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/Donate_page.md"));
-    }
-    //=========
-    return 0;
-}
-
-void MainWindow::on_checkBox_autoCheckUpdate_clicked()
-{
-    if(ui->checkBox_autoCheckUpdate->checkState()==false)
-    {
-        QMessageBox *MSG = new QMessageBox();
-        MSG->setWindowTitle(tr("!!! Warning !!!"));
-        MSG->setText(tr("We do not recommend that you cancel the automatic check for updates as this may prevent you from receiving timely bug fixes."));
-        MSG->setIcon(QMessageBox::Warning);
-        MSG->setModal(false);
-        MSG->show();
     }
 }
 
@@ -1081,27 +1066,19 @@ void MainWindow::on_pushButton_about_clicked()
     MSG->setWindowTitle(tr("About"));
     QString line1 = "Waifu2x-Extension-GUI\n\n";
     QString line2 = VERSION+"\n\n";
-    QString line3 = "Github:https://github.com/AaronFeng753/Waifu2x-Extension-GUI\n\n";
+    QString line3 = "Github: https://github.com/AaronFeng753/Waifu2x-Extension-GUI\n\n";
     QString line4 = "Waifu2x-Extension-GUI is licensed under the\n";
     QString line5 = "GNU Affero General Public License v3.0\n\n";
-    QString line6 = "Copyright (C) 2020  Aaron Feng";
-    MSG->setText(line1+line2+line3+line4+line5+line6);
+    QString line6 = "Copyright (C) 2020 Aaron Feng. All rights reserved.\n\n";
+    QString line7 = "The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.\n\n";
+    QString line8 = "Icons made by : Freepik (https://www.flaticon.com/authors/freepik) From Flaticon : https://www.flaticon.com/";
+    MSG->setText(line1+line2+line3+line4+line5+line6+line7+line8);
     QImage img(":/new/prefix1/icon/icon_main.png");
     QImage img_scaled = img.scaled(50,50,Qt::KeepAspectRatio,Qt::SmoothTransformation);
     QPixmap pix(QPixmap::fromImage(img_scaled));
     MSG->setIconPixmap(pix);
     MSG->setModal(false);
     MSG->show();
-}
-
-void MainWindow::on_checkBox_AlwaysHideInput_stateChanged(int arg1)
-{
-    if(ui->checkBox_AlwaysHideInput->checkState())
-    {
-        ui->groupBox_Input->setVisible(0);
-        ui->groupBox_OutPut->setVisible(0);
-        ui->pushButton_HideInput->setText(tr("Show Path Settings"));
-    }
 }
 
 void MainWindow::on_comboBox_AspectRatio_custRes_currentIndexChanged(int index)
@@ -1134,30 +1111,6 @@ void MainWindow::on_checkBox_AlwaysHideSettings_stateChanged(int arg1)
         ui->groupBox_Setting->setVisible(0);
         ui->pushButton_HideSettings->setText(tr("Show settings"));
     }
-}
-
-void MainWindow::on_spinBox_ThreadNum_gif_internal_valueChanged(int arg1)
-{
-    int Total=(ui->spinBox_ThreadNum_gif->value())*(ui->spinBox_ThreadNum_gif_internal->value());
-    ui->label_TotalThreadNum_gif->setText(QString(tr("Total:%1")).arg(Total));
-}
-
-void MainWindow::on_spinBox_ThreadNum_gif_valueChanged(int arg1)
-{
-    int Total=(ui->spinBox_ThreadNum_gif->value())*(ui->spinBox_ThreadNum_gif_internal->value());
-    ui->label_TotalThreadNum_gif->setText(QString(tr("Total:%1")).arg(Total));
-}
-
-void MainWindow::on_spinBox_ThreadNum_video_valueChanged(int arg1)
-{
-    int Total=(ui->spinBox_ThreadNum_video->value())*(ui->spinBox_ThreadNum_video_internal->value());
-    ui->label_TotalThreadNum_video->setText(QString(tr("Total:%1")).arg(Total));
-}
-
-void MainWindow::on_spinBox_ThreadNum_video_internal_valueChanged(int arg1)
-{
-    int Total=(ui->spinBox_ThreadNum_video->value())*(ui->spinBox_ThreadNum_video_internal->value());
-    ui->label_TotalThreadNum_video->setText(QString(tr("Total:%1")).arg(Total));
 }
 
 void MainWindow::on_pushButton_Save_GlobalFontSize_clicked()
@@ -1298,16 +1251,6 @@ void MainWindow::on_pushButton_wiki_clicked()
     }
     QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/wiki"));
 }
-/*
-最小化
-*/
-void MainWindow::on_pushButton_Minimize_clicked()
-{
-    if(ui->groupBox_Input->isVisible())on_pushButton_HideInput_clicked();
-    if(ui->groupBox_Setting->isVisible())on_pushButton_HideSettings_clicked();
-    if(ui->textBrowser->isVisible())on_pushButton_HideTextBro_clicked();
-    this->adjustSize();
-}
 
 void MainWindow::on_pushButton_HideTextBro_clicked()
 {
@@ -1351,6 +1294,10 @@ void MainWindow::on_comboBox_model_vulkan_currentIndexChanged(int index)
     if(ui->comboBox_model_vulkan->currentIndex()==0)
     {
         ui->comboBox_ImageStyle->setEnabled(1);
+        if(ui->comboBox_Engine_Image->currentIndex()!=0&&ui->comboBox_Engine_GIF->currentIndex()!=0&&ui->comboBox_Engine_Video->currentIndex()!=0)
+        {
+            ui->comboBox_ImageStyle->setEnabled(0);
+        }
     }
     if(ui->comboBox_model_vulkan->currentIndex()==1)
     {
@@ -1435,6 +1382,10 @@ void MainWindow::on_checkBox_acodec_copy_2mp4_stateChanged(int arg1)
 void MainWindow::on_pushButton_encodersList_clicked()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/AaronFeng753/Waifu2x-Extension-GUI/blob/master/EncodersList.txt"));
+    if(ui->comboBox_language->currentIndex()==1)
+    {
+        QDesktopServices::openUrl(QUrl("https://gitee.com/aaronfeng0711/Waifu2x-Extension-GUI/blob/master/EncodersList.txt"));
+    }
 }
 
 void MainWindow::Tip_FirstTimeStart()
@@ -1446,29 +1397,40 @@ void MainWindow::Tip_FirstTimeStart()
     }
     else
     {
-        QString English_1 = "- Please read the Wiki before starting to use the software.\n";
-        QString English_7 = "- If there is a problem with the software font display, you can modify the font in the additional settings.\n";
-        QString English_8 = "- This software is free software, if you find anyone selling this software, please report the seller.\n";
-        QString English_9 = "- This software is free and open source, and is is licensed under the GNU Affero General Public License v3.0. All consequences of using this software are borne by the user, and the developer does not bear any responsibility.\n";
-        QString English_10 = "- If you like this software, please donate to the developer, thank you.\n";
-        //========
-        QString Chinese_1 = "- 正式开始使用本软件前请先阅读 Wiki.\n";
-        QString Chinese_7 = "- 如果软件字体显示有问题, 您可以在附加设置内修改字体.\n";
-        QString Chinese_8 = "- 本软件为免费软件, 如果您发现任何人贩售本软件, 请举报贩售者.\n";
-        QString Chinese_9 = "- 在附加设置内可以将语言调整为简体中文.\n";
-        QString Chinese_10 = "- 本软件免费开源, 并基于 GNU Affero General Public License v3.0 协议发行, 使用本软件的一切后果均由用户自己承担, 开发者不承担任何责任.\n";
-        QString Chinese_11 = "- 如果您喜欢本软件, 请向开发者捐赠, 谢谢.\n";
+        /*
+          弹出语言选择对话框
+        */
+        QMessageBox Msg(QMessageBox::Question, QString("Choose your language"), QString("Choose your language.\n\n选择您的语言。\n\n言語を選んでください。"));
+        Msg.setIcon(QMessageBox::Information);
+        QAbstractButton *pYesBtn_English = (QAbstractButton *)Msg.addButton(QString("English"), QMessageBox::YesRole);
+        QAbstractButton *pYesBtn_Chinese = (QAbstractButton *)Msg.addButton(QString("简体中文"), QMessageBox::YesRole);
+        QAbstractButton *pYesBtn_Japanese = (QAbstractButton *)Msg.addButton(QString("日本語(機械翻訳)"), QMessageBox::YesRole);
+        QAbstractButton *pYesBtn_TraditionalChinese = (QAbstractButton *)Msg.addButton(QString("繁體中文(由uimee翻譯)"), QMessageBox::YesRole);
+        Msg.exec();
+        if (Msg.clickedButton() == pYesBtn_English)ui->comboBox_language->setCurrentIndex(0);
+        if (Msg.clickedButton() == pYesBtn_Chinese)ui->comboBox_language->setCurrentIndex(1);
+        if (Msg.clickedButton() == pYesBtn_Japanese)ui->comboBox_language->setCurrentIndex(2);
+        if (Msg.clickedButton() == pYesBtn_TraditionalChinese)ui->comboBox_language->setCurrentIndex(3);
+        on_comboBox_language_currentIndexChanged(0);
+        /*
+          弹出必读Tips对话框
+        */
+        QString English_1 = tr("- Please read the Wiki before starting to use the software.\n");
+        QString English_7 = tr("- If there is a problem with the software font display, you can modify the font in the additional settings.\n");
+        QString English_8 = tr("- This software is free software, if you find anyone selling this software, please report the seller.\n");
+        QString English_9 = tr("- This software is free and open source, and is is licensed under the GNU Affero General Public License v3.0. All consequences of using this software are borne by the user, and the developer does not bear any responsibility.\n");
+        QString English_10 = tr("- If you like this software, please donate to the developer, thank you.\n");
         //========
         QMessageBox *MSG = new QMessageBox();
-        MSG->setWindowTitle("!!! Tips 必读 !!!");
-        MSG->setText(English_1+English_7+English_8+English_9+English_10+"----------------------\n"+Chinese_1+Chinese_7+Chinese_8+Chinese_9+Chinese_10+Chinese_11);
+        MSG->setWindowTitle(tr("!!! Tips !!!"));
+        MSG->setText(English_1+English_7+English_8+English_9+English_10);
         MSG->setIcon(QMessageBox::Information);
         MSG->setModal(true);
         MSG->show();
         //======
         QMessageBox *MSG_2 = new QMessageBox();
         MSG_2->setWindowTitle(tr("Notification"));
-        MSG_2->setText("It is detected that this is the first time you have started the software, so the compatibility test will be performed automatically. Please wait for a while, and you can view the test results in the text box at the bottom of the main interface of the software.\n\n检测到这是您第一次启动软件,所以将自动执行兼容性测试.请稍等片刻,然后在软件主界面底部的文本框内查看兼容性测试结果.");
+        MSG_2->setText(tr("It is detected that this is the first time you have started the software, so the compatibility test will be performed automatically. Please wait for a while, then check the test result."));
         MSG_2->setIcon(QMessageBox::Information);
         MSG_2->setModal(true);
         MSG_2->show();
@@ -1481,6 +1443,7 @@ void MainWindow::Tip_FirstTimeStart()
             stream << "Don't delete this file!!";
         }
         //=======
+        on_pushButton_clear_textbrowser_clicked();
         on_pushButton_compatibilityTest_clicked();
     }
 }
@@ -1503,11 +1466,13 @@ void MainWindow::on_checkBox_videoSettings_isEnabled_stateChanged(int arg1)
 {
     if(ui->checkBox_videoSettings_isEnabled->checkState())
     {
-        ui->tabWidget_videoSettings->setEnabled(1);
+        ui->groupBox_OutputVideoSettings->setEnabled(1);
+        ui->groupBox_ToMp4VideoSettings->setEnabled(1);
     }
     else
     {
-        ui->tabWidget_videoSettings->setEnabled(0);
+        ui->groupBox_OutputVideoSettings->setEnabled(0);
+        ui->groupBox_ToMp4VideoSettings->setEnabled(0);
     }
 }
 
@@ -1600,13 +1565,152 @@ void MainWindow::on_checkBox_AudioDenoise_stateChanged(int arg1)
 
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    if(ui->tabWidget->currentIndex()==0)
+    switch(ui->tabWidget->currentIndex())
     {
-        ui->groupBox_AdditionalSettings->setVisible(0);
-    }
-    if(ui->tabWidget->currentIndex()==1)
-    {
-        ui->groupBox_AdditionalSettings->setVisible(1);
+        case 0:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(1);
+                ui->pushButton_PayPal->setVisible(1);
+                ui->label_DonateText->setVisible(1);
+                //tab 1
+                ui->groupBox_FileList->setVisible(0);
+                ui->groupBox_Progress->setVisible(0);
+                ui->groupBox_Setting->setVisible(0);
+                //tab 2
+                ui->groupBox_Engine->setVisible(0);
+                ui->groupBox_NumOfThreads->setVisible(0);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(0);
+                ui->groupBox_video_settings->setVisible(0);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(0);
+                ui->groupBox_AdditionalSettings->setVisible(0);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(0);
+                ui->pushButton_compatibilityTest->setVisible(0);
+                break;
+            }
+        case 1:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(0);
+                ui->pushButton_PayPal->setVisible(0);
+                ui->label_DonateText->setVisible(0);
+                //tab 1
+                ui->groupBox_FileList->setVisible(1);
+                ui->groupBox_Progress->setVisible(1);
+                ui->groupBox_Setting->setVisible(1);
+                //tab 2
+                ui->groupBox_Engine->setVisible(0);
+                ui->groupBox_NumOfThreads->setVisible(0);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(0);
+                ui->groupBox_video_settings->setVisible(0);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(0);
+                ui->groupBox_AdditionalSettings->setVisible(0);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(0);
+                ui->pushButton_compatibilityTest->setVisible(0);
+                break;
+            }
+        case 2:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(0);
+                ui->pushButton_PayPal->setVisible(0);
+                ui->label_DonateText->setVisible(0);
+                //tab 1
+                ui->groupBox_FileList->setVisible(0);
+                ui->groupBox_Progress->setVisible(0);
+                ui->groupBox_Setting->setVisible(0);
+                //tab 2
+                ui->groupBox_Engine->setVisible(1);
+                ui->groupBox_NumOfThreads->setVisible(1);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(0);
+                ui->groupBox_video_settings->setVisible(0);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(0);
+                ui->groupBox_AdditionalSettings->setVisible(0);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(0);
+                ui->pushButton_compatibilityTest->setVisible(0);
+                break;
+            }
+        case 3:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(0);
+                ui->pushButton_PayPal->setVisible(0);
+                ui->label_DonateText->setVisible(0);
+                //tab 1
+                ui->groupBox_FileList->setVisible(0);
+                ui->groupBox_Progress->setVisible(0);
+                ui->groupBox_Setting->setVisible(0);
+                //tab 2
+                ui->groupBox_Engine->setVisible(0);
+                ui->groupBox_NumOfThreads->setVisible(0);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(1);
+                ui->groupBox_video_settings->setVisible(1);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(0);
+                ui->groupBox_AdditionalSettings->setVisible(0);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(0);
+                ui->pushButton_compatibilityTest->setVisible(0);
+                break;
+            }
+        case 4:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(0);
+                ui->pushButton_PayPal->setVisible(0);
+                ui->label_DonateText->setVisible(0);
+                //tab 1
+                ui->groupBox_FileList->setVisible(0);
+                ui->groupBox_Progress->setVisible(0);
+                ui->groupBox_Setting->setVisible(0);
+                //tab 2
+                ui->groupBox_Engine->setVisible(0);
+                ui->groupBox_NumOfThreads->setVisible(0);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(0);
+                ui->groupBox_video_settings->setVisible(0);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(1);
+                ui->groupBox_AdditionalSettings->setVisible(1);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(0);
+                ui->pushButton_compatibilityTest->setVisible(0);
+                break;
+            }
+        case 5:
+            {
+                //tab 0
+                ui->label_DonateQRCode->setVisible(0);
+                ui->pushButton_PayPal->setVisible(0);
+                ui->label_DonateText->setVisible(0);
+                //tab 1
+                ui->groupBox_FileList->setVisible(0);
+                ui->groupBox_Progress->setVisible(0);
+                ui->groupBox_Setting->setVisible(0);
+                //tab 2
+                ui->groupBox_Engine->setVisible(0);
+                ui->groupBox_NumOfThreads->setVisible(0);
+                //tab 3
+                ui->groupBox_AudioDenoise->setVisible(0);
+                ui->groupBox_video_settings->setVisible(0);
+                //tab 4
+                ui->groupBox_AddSettingsButtons->setVisible(0);
+                ui->groupBox_AdditionalSettings->setVisible(0);
+                //tab 5
+                ui->groupBox_CompatibilityTestRes->setVisible(1);
+                ui->pushButton_compatibilityTest->setVisible(1);
+                break;
+            }
     }
 }
 
@@ -1698,5 +1802,107 @@ void MainWindow::on_checkBox_EnablePostProcessing_Anime4k_stateChanged(int arg1)
         ui->checkBox_GaussianBlur_Post_Anime4k->setEnabled(0);
         ui->checkBox_BilateralFilter_Post_Anime4k->setEnabled(0);
         ui->checkBox_BilateralFilterFaster_Post_Anime4k->setEnabled(0);
+    }
+}
+
+void MainWindow::on_checkBox_SpecifyGPU_Anime4k_stateChanged(int arg1)
+{
+    if(ui->checkBox_SpecifyGPU_Anime4k->checkState())
+    {
+        ui->spinBox_PlatformID_Anime4k->setEnabled(1);
+        ui->spinBox_DeviceID_Anime4k->setEnabled(1);
+        ui->pushButton_ListGPUs_Anime4k->setEnabled(1);
+    }
+    else
+    {
+        ui->spinBox_PlatformID_Anime4k->setEnabled(0);
+        ui->spinBox_DeviceID_Anime4k->setEnabled(0);
+        ui->pushButton_ListGPUs_Anime4k->setEnabled(0);
+    }
+}
+
+void MainWindow::on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW_clicked()
+{
+    ui->checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW->setChecked(isCompatible_Waifu2x_NCNN_Vulkan_NEW);
+}
+
+void MainWindow::on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW_FP16P_clicked()
+{
+    ui->checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW_FP16P->setChecked(isCompatible_Waifu2x_NCNN_Vulkan_NEW_FP16P);
+}
+
+void MainWindow::on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_OLD_clicked()
+{
+    ui->checkBox_isCompatible_Waifu2x_NCNN_Vulkan_OLD->setChecked(isCompatible_Waifu2x_NCNN_Vulkan_OLD);
+}
+
+void MainWindow::on_checkBox_isCompatible_SRMD_NCNN_Vulkan_clicked()
+{
+    ui->checkBox_isCompatible_SRMD_NCNN_Vulkan->setChecked(isCompatible_SRMD_NCNN_Vulkan);
+}
+
+void MainWindow::on_checkBox_isCompatible_Waifu2x_Converter_clicked()
+{
+    ui->checkBox_isCompatible_Waifu2x_Converter->setChecked(isCompatible_Waifu2x_Converter);
+}
+
+void MainWindow::on_checkBox_isCompatible_Anime4k_CPU_clicked()
+{
+    ui->checkBox_isCompatible_Anime4k_CPU->setChecked(isCompatible_Anime4k_CPU);
+}
+
+void MainWindow::on_checkBox_isCompatible_Anime4k_GPU_clicked()
+{
+    ui->checkBox_isCompatible_Anime4k_GPU->setChecked(isCompatible_Anime4k_GPU);
+}
+
+void MainWindow::on_checkBox_isCompatible_PythonExtension_clicked()
+{
+    ui->checkBox_isCompatible_PythonExtension->setChecked(isCompatible_PythonExtension);
+}
+
+void MainWindow::on_checkBox_isCompatible_FFmpeg_clicked()
+{
+    ui->checkBox_isCompatible_FFmpeg->setChecked(isCompatible_FFmpeg);
+}
+
+void MainWindow::on_checkBox_isCompatible_FFprobe_clicked()
+{
+    ui->checkBox_isCompatible_FFprobe->setChecked(isCompatible_FFprobe);
+}
+
+void MainWindow::on_checkBox_isCompatible_ImageMagick_clicked()
+{
+    ui->checkBox_isCompatible_ImageMagick->setChecked(isCompatible_ImageMagick);
+}
+
+void MainWindow::on_checkBox_isCompatible_Gifsicle_clicked()
+{
+    ui->checkBox_isCompatible_Gifsicle->setChecked(isCompatible_Gifsicle);
+}
+
+void MainWindow::on_checkBox_isCompatible_SoX_clicked()
+{
+    ui->checkBox_isCompatible_SoX->setChecked(isCompatible_SoX);
+}
+
+void MainWindow::on_checkBox_GPUMode_Anime4K_stateChanged(int arg1)
+{
+    if(ui->checkBox_GPUMode_Anime4K->checkState())
+    {
+        ui->checkBox_SpecifyGPU_Anime4k->setEnabled(1);
+    }
+    else
+    {
+        ui->checkBox_SpecifyGPU_Anime4k->setEnabled(0);
+        ui->checkBox_SpecifyGPU_Anime4k->setChecked(0);
+    }
+}
+
+void MainWindow::on_checkBox_ShowInterPro_stateChanged(int arg1)
+{
+    if(ui->checkBox_ShowInterPro->checkState()==false)
+    {
+        emit Send_CurrentFileProgress_Stop();
     }
 }

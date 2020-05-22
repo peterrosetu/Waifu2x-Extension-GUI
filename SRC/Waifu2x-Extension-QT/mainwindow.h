@@ -68,7 +68,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     //=======================
-    QString VERSION = "v1.71.1";//软件版本号
+    QString VERSION = "v2.22.01-beta";//软件版本号
     //=======================
     QTranslator * translator;//界面翻译
     //=======
@@ -79,7 +79,7 @@ public:
     void dragEnterEvent(QDragEnterEvent *event);//拖放文件event
     void dropEvent(QDropEvent *event);
     void Read_urls(QList<QUrl> urls);
-    void Read_Path(QString Input_path);
+
     bool AddNew_gif=false;//判断是否有新增文件-gif
     bool AddNew_image=false;//判断是否有新增文件-图片
     bool AddNew_video=false;//判断是否有新增文件-视频
@@ -105,6 +105,13 @@ public:
     void file_MoveFile(QString Orginal,QString Target);//移动文件
 
     QString file_getFolderPath(QFileInfo fileInfo);//获取文件夹路径(去除末尾的"/")
+
+    bool file_isDirWritable(QString DirPath);//检查文件夹是否可写入
+
+    //检查当前行的文件所在的文件夹是否可写入
+    bool file_isFilesFolderWritable_row_image(int rowNum);
+    bool file_isFilesFolderWritable_row_video(int rowNum);
+    bool file_isFilesFolderWritable_row_gif(int rowNum);
     //=================================  Table =================================
     void Init_Table();//初始化三个tableview
     QStandardItemModel *Table_model_image = new QStandardItemModel();
@@ -155,6 +162,9 @@ public:
     int Waifu2x_NCNN_Vulkan_Video_BySegment(int rowNum);
     int Waifu2x_NCNN_Vulkan_Video_scale(QMap<QString, QString> Sub_Thread_info,int *Sub_video_ThreadNumRunning,bool *Frame_failed);
     //=========================
+    int Anime4k_Image(int rowNum);
+    int Anime4k_GIF(int rowNum);
+    int Anime4k_GIF_scale(QMap<QString,QString> Sub_Thread_info,int *Sub_gif_ThreadNumRunning,bool *Frame_failed);
     //Anime4k放大视频线程:1.主线程,拆分,调度放大子线程,组装;2.放大子线程,负责放大所有帧以及调整大小
     int Anime4k_Video(int rowNum);
     int Anime4k_Video_BySegment(int rowNum);
@@ -205,6 +215,22 @@ public:
     QString GPU_ID_STR_SRMD="";//向srmd命令行cmd插入的gpuid命令,如果auto则为空
 
     bool Imgae_hasAlphaChannel(int rowNum);
+
+    //兼容性检测
+    bool isCompatible_Waifu2x_NCNN_Vulkan_OLD=false;
+    bool isCompatible_Waifu2x_NCNN_Vulkan_NEW=false;
+    bool isCompatible_Waifu2x_NCNN_Vulkan_NEW_FP16P=false;
+    bool isCompatible_SRMD_NCNN_Vulkan=false;
+    bool isCompatible_Waifu2x_Converter=false;
+    bool isCompatible_Anime4k_CPU=false;
+    bool isCompatible_Anime4k_GPU=false;
+
+    bool isCompatible_PythonExtension=false;
+    bool isCompatible_FFmpeg=false;
+    bool isCompatible_FFprobe=false;
+    bool isCompatible_ImageMagick=false;
+    bool isCompatible_Gifsicle=false;
+    bool isCompatible_SoX=false;
     //================================ progressbar ===================================
     int Progressbar_MaxVal = 0;//进度条最大值
     int Progressbar_CurrentVal = 0;//进度条当前值
@@ -282,7 +308,6 @@ public:
     int CheckUpadte_Auto();//自动检查更新
 
     int Donate_Count();//计算启动次数判断是否弹窗
-    int Donate_watchdog();//后台延时,然后弹出捐赠提示
     //=========== 关闭窗口时执行的代码 ===============
     void closeEvent(QCloseEvent* event);//关闭事件,包含所有关闭时执行的代码
     bool QProcess_stop=false;//所有QProcess停止标记
@@ -290,9 +315,16 @@ public:
     QFuture<int> AutoUpdate;//监视自动检查更新线程
     QFuture<int> Waifu2xMain;//监视waifu2x主线程
     int Force_close();//调用cmd强制关闭自己
+    //================== 处理当前文件的进度 =========================
+    long unsigned int TimeCost_CurrentFile =0;
+    int TaskNumTotal_CurrentFile=0;
+    int TaskNumFinished_CurrentFile=0;
+    bool NewTaskFinished_CurrentFile=false;
+    long unsigned int ETA_CurrentFile=0;
+    bool isStart_CurrentFile=false;
     //=============================================
     void Tip_FirstTimeStart();
-
+    //=============
     ~MainWindow();
 
 
@@ -339,8 +371,6 @@ public slots:
 
     bool SystemShutDown();//关机
 
-    int Donate_Notification();//捐赠弹窗
-
     int Waifu2x_DumpProcessorList_converter_finished();
 
     void Read_urls_finfished();
@@ -356,6 +386,12 @@ public slots:
     //存储进度
     void video_write_Progress_ProcessBySegment(QString VideoConfiguration_fullPath,int StartTime,bool isSplitComplete,bool isScaleComplete);
 
+    //================== 处理当前文件的进度 =========================
+    void CurrentFileProgress_Start(QString FileName,int FrameNum);
+    void CurrentFileProgress_Stop();
+    void CurrentFileProgress_progressbar_Add();
+    void CurrentFileProgress_progressbar_Add_SegmentDuration(int SegmentDuration);
+
 private slots:
 
     void on_pushButton_Start_clicked();
@@ -368,15 +404,11 @@ private slots:
 
     void on_checkBox_SaveAsJPG_stateChanged(int arg1);
 
-    void on_pushButton_donate_clicked();
-
     void on_pushButton_CheckUpdate_clicked();
 
     void on_pushButton_Report_clicked();
 
     void on_pushButton_ReadMe_clicked();
-
-    void on_pushButton_AddPath_clicked();
 
     void on_comboBox_Engine_Image_currentIndexChanged(int index);
 
@@ -390,7 +422,6 @@ private slots:
 
     void on_pushButton_compatibilityTest_clicked();
 
-
     void on_tableView_image_clicked(const QModelIndex &index);
 
     void on_tableView_gif_clicked(const QModelIndex &index);
@@ -402,9 +433,6 @@ private slots:
     void on_pushButton_CustRes_cancel_clicked();
 
     void on_pushButton_HideSettings_clicked();
-
-    void on_pushButton_HideInput_clicked();
-
 
     void on_pushButton_DetectGPU_clicked();
 
@@ -424,33 +452,19 @@ private slots:
 
     void on_Ext_video_editingFinished();
 
-    void on_checkBox_autoCheckUpdate_clicked();
-
     void on_checkBox_AutoSaveSettings_clicked();
 
     void on_pushButton_about_clicked();
 
-    void on_checkBox_AlwaysHideInput_stateChanged(int arg1);
-
     void on_comboBox_AspectRatio_custRes_currentIndexChanged(int index);
 
     void on_checkBox_AlwaysHideSettings_stateChanged(int arg1);
-
-    void on_spinBox_ThreadNum_gif_internal_valueChanged(int arg1);
-
-    void on_spinBox_ThreadNum_gif_valueChanged(int arg1);
-
-    void on_spinBox_ThreadNum_video_valueChanged(int arg1);
-
-    void on_spinBox_ThreadNum_video_internal_valueChanged(int arg1);
 
     void on_pushButton_Save_GlobalFontSize_clicked();
 
     void on_pushButton_BrowserFile_clicked();
 
     void on_pushButton_wiki_clicked();
-
-    void on_pushButton_Minimize_clicked();
 
     void on_pushButton_HideTextBro_clicked();
 
@@ -510,6 +524,40 @@ private slots:
 
     void on_checkBox_EnablePostProcessing_Anime4k_stateChanged(int arg1);
 
+    void on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW_clicked();
+
+    void on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_NEW_FP16P_clicked();
+
+    void on_checkBox_isCompatible_Waifu2x_NCNN_Vulkan_OLD_clicked();
+
+    void on_checkBox_isCompatible_SRMD_NCNN_Vulkan_clicked();
+
+    void on_checkBox_isCompatible_Waifu2x_Converter_clicked();
+
+    void on_checkBox_isCompatible_Anime4k_CPU_clicked();
+
+    void on_checkBox_isCompatible_Anime4k_GPU_clicked();
+
+    void on_checkBox_SpecifyGPU_Anime4k_stateChanged(int arg1);
+
+    void on_pushButton_ListGPUs_Anime4k_clicked();
+
+    void on_checkBox_isCompatible_PythonExtension_clicked();
+
+    void on_checkBox_isCompatible_FFmpeg_clicked();
+
+    void on_checkBox_isCompatible_FFprobe_clicked();
+
+    void on_checkBox_isCompatible_ImageMagick_clicked();
+
+    void on_checkBox_isCompatible_Gifsicle_clicked();
+
+    void on_checkBox_isCompatible_SoX_clicked();
+
+    void on_checkBox_GPUMode_Anime4K_stateChanged(int arg1);
+
+    void on_checkBox_ShowInterPro_stateChanged(int arg1);
+
 signals:
     void Send_PrograssBar_Range_min_max(int, int);
     void Send_progressbar_Add();
@@ -546,8 +594,6 @@ signals:
 
     void Send_SystemShutDown();
 
-    void Send_Donate_Notification();
-
     void Send_Waifu2x_DumpProcessorList_converter_finished();
 
     void Send_Read_urls_finfished();
@@ -561,6 +607,12 @@ signals:
     void Send_Settings_Save();
 
     void Send_video_write_Progress_ProcessBySegment(QString VideoConfiguration_fullPath,int StartTime,bool isSplitComplete,bool isScaleComplete);
+
+    //================== 处理当前文件的进度 =========================
+    void Send_CurrentFileProgress_Start(QString FileName,int FrameNum);
+    void Send_CurrentFileProgress_Stop();
+    void Send_CurrentFileProgress_progressbar_Add();
+    void Send_CurrentFileProgress_progressbar_Add_SegmentDuration(int SegmentDuration);
 
 private:
     Ui::MainWindow *ui;

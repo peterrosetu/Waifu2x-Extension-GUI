@@ -6,11 +6,60 @@
 - 腾讯微云：https://share.weiyun.com/5abrs1W 密码：s4monw
 - 百度云: https://pan.baidu.com/s/14grAcWeHs6v71tLnE1-81w 提取码: swe7
 ---
+## [v2.11.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.11.3)
+#### 更新日志:
+- 新特性:Anime4K引擎支持处理图片和GIF.
+- 新特性:根据兼容性测试结果自动调整引擎设置.
+- 兼容性测试结束后,根据测试结果给予用户提示.
+- 更新Anime4K(v1.8.1).
+- 更新ImageMagick(7.0.10-12-Q16-x64).
+- 更改默认设置.
+- 添加一些提示.
+- 处理文件前检测是否拥有文件所在目录的写权限.
+- 改进软件启动时的权限检测.
+- 修复bug:特殊情况下,处理视频时可能会卡在获取时长那一步.
+- 修复bug:无法正常检测是否拥有输出路径的写权限.
+- 修复bug:当使用Anime4k引擎处理视频时,自定义分辨率设定无效.
+---
+## [v2.02.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.02.3)
+#### 更新日志:
+- 更新Anime4K(v1.7.0).
+- 改进简体中文支持.
+- 改进兼容性测试,减少资源占用.
+- 添加一些提示.
+- 修复bug:某些情况下,程序会在运行兼容性测试时卡住.
+- 修复bug:某些组件未在处理文件时禁用,可能导致潜在错误.
+---
+## [v2.01.1](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v2.01.1)
+#### 更新日志:
+- 新特性:重新设计用户界面.
+- 新特性:添加[繁體中文]支持(感謝 @uimee 協助翻譯).
+- 新特性:Anime4K引擎支持指定GPU.
+- 新特性:存储与读取所有引擎的GPU设置.
+- 新特性:改进兼容性测试,增加检测项目,支持存储测试结果.
+- 更新Anime4K(v1.6.0).
+- 更新ImageMagick(7.0.10-10-Q16-x64).
+- 改进多线程管理.
+- 添加一些提示.
+- 性能优化.
+- 修复bug.
+---
+## [v1.73.3](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v1.73.3)
+#### 更新日志:
+- 新特性:为Anime4K引擎加入GPU加速支持.
+- 新特性:安装软件后,首次启动时弹窗让用户选择自己所使用的语言.
+- 更新Anime4K(v1.5.0)
+- 不再允许禁用自动检查更新，但是可以禁用自动更新弹窗，禁用弹窗后将在文本框内显示更新提示.
+- 兼容测试结束后弹窗提示用户查看测试结果.
+- 完善兼容性测试.
+- 当文件列表内包含GIF或视频时隐藏ETA和剩余时间.
+- 完善多语言支持.
+- 修复bug.
+---
 ## [v1.71.1](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/tag/v1.71.1)
 #### 更新日志:
 - 新特性:用Anime4KCPP替换掉了之前的Anime4K-JAVA,Anime4KCPP与Anime4K-JAVA相比速度更快,画质更好.
 - 新特性:为Anime4K引擎添加了大量自定义设置.
-![cn](https://raw.githubusercontent.com/AaronFeng753/Waifu2x-Extension-GUI/master/.github/temp/anime4kSettings_cn.jpg)
 - 界面布局调整.
 - 修正翻译错误.
 - 修改部分文本.

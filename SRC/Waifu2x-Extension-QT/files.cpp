@@ -40,7 +40,6 @@ void MainWindow::dropEvent(QDropEvent *event)
     if(urls.isEmpty())
         return;
     //================== 界面管制 ========================
-    ui->groupBox_Input->setEnabled(0);
     ui->groupBox_Setting->setEnabled(0);
     ui->groupBox_FileList->setEnabled(0);
     ui->groupBox_InputExt->setEnabled(0);
@@ -81,7 +80,6 @@ void MainWindow::Read_urls(QList<QUrl> urls)
 void MainWindow::Read_urls_finfished()
 {
     //================== 解除界面管制 ========================
-    ui->groupBox_Input->setEnabled(1);
     ui->groupBox_Setting->setEnabled(1);
     ui->groupBox_FileList->setEnabled(1);
     ui->pushButton_Start->setEnabled(1);
@@ -527,4 +525,88 @@ QString MainWindow::file_getFolderPath(QFileInfo fileInfo)
         folder_path = folder_path.left(folder_path.length() - 1);
     }
     return folder_path;
+}
+/*
+检测文件夹是否可写入
+*/
+bool MainWindow::file_isDirWritable(QString DirPath)
+{
+    if(DirPath.right(1)=="/")
+    {
+        DirPath = DirPath.left(DirPath.length() - 1);
+    }
+    QString TestTemp = DirPath+"/TestTemp_Waifu2xExGUI.tmp";
+    QFile file_TestTemp(TestTemp);
+    file_TestTemp.remove();
+    if (file_TestTemp.open(QIODevice::ReadWrite | QIODevice::Text)) //QIODevice::ReadWrite支持读写
+    {
+        QTextStream stream(&file_TestTemp);
+        stream << "0000";
+    }
+    if(file_isFileExist(TestTemp))
+    {
+        file_TestTemp.remove();
+        return true;
+    }
+    else
+    {
+        file_TestTemp.remove();
+        return false;
+    }
+}
+/*
+判断当前处理的文件所在的文件夹是否可以写入
+*/
+bool MainWindow::file_isFilesFolderWritable_row_image(int rowNum)
+{
+    QString SourceFile_fullPath = Table_model_image->item(rowNum,2)->text();
+    QFileInfo fileinfo(SourceFile_fullPath);
+    QString file_FolderPath = file_getFolderPath(fileinfo);
+    if(file_isDirWritable(file_FolderPath))
+    {
+        return true;
+    }
+    else
+    {
+        emit Send_TextBrowser_NewMessage(tr("Error occured when processing [")+SourceFile_fullPath+tr("]. Error: [Insufficient permissions, administrator permissions is needed.]"));
+        QString status = "Failed";
+        emit Send_Table_image_ChangeStatus_rowNumInt_statusQString(rowNum, status);
+        return false;
+    }
+}
+
+bool MainWindow::file_isFilesFolderWritable_row_gif(int rowNum)
+{
+    QString SourceFile_fullPath = Table_model_gif->item(rowNum,2)->text();
+    QFileInfo fileinfo(SourceFile_fullPath);
+    QString file_FolderPath = file_getFolderPath(fileinfo);
+    if(file_isDirWritable(file_FolderPath))
+    {
+        return true;
+    }
+    else
+    {
+        emit Send_TextBrowser_NewMessage(tr("Error occured when processing [")+SourceFile_fullPath+tr("]. Error: [Insufficient permissions, administrator permissions is needed.]"));
+        QString status = "Failed";
+        emit Send_Table_gif_ChangeStatus_rowNumInt_statusQString(rowNum, status);
+        return false;
+    }
+}
+
+bool MainWindow::file_isFilesFolderWritable_row_video(int rowNum)
+{
+    QString SourceFile_fullPath = Table_model_video->item(rowNum,2)->text();
+    QFileInfo fileinfo(SourceFile_fullPath);
+    QString file_FolderPath = file_getFolderPath(fileinfo);
+    if(file_isDirWritable(file_FolderPath))
+    {
+        return true;
+    }
+    else
+    {
+        emit Send_TextBrowser_NewMessage(tr("Error occured when processing [")+SourceFile_fullPath+tr("]. Error: [Insufficient permissions, administrator permissions is needed.]"));
+        QString status = "Failed";
+        emit Send_Table_video_ChangeStatus_rowNumInt_statusQString(rowNum, status);
+        return false;
+    }
 }
