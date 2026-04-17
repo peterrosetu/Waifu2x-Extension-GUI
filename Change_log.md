@@ -4,6 +4,54 @@
 
 #### [💾Latest stable release](https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/latest)
 ---
+## v3.134.01
+- Updated Waifu2x-NCNN-Vulkan Engine, overall 22% faster than previous version.
+- Improved subtitle processing logic, now supports a wider range of subtitle formats.
+---
+## v3.133.01
+- HAPPY NEW YEAR 2026!
+- NEW Model: V1.5 update for Omni-Turbo-W2xEX, improved denoise and clarity through continue training.
+- Smarter handling of extreme high-res images, better adapted for different super-res engines and settings.
+- Faster compatibility test on RTX 50 series.
+- Update some console messages.
+---
+## v3.132.01
+- Improved [Speed Boost](Frame Analysis) for faster matching.
+- Improved [Scene Shift Detection](Frame Analysis) for faster detection.
+- Enhanced handling of high-resolution images:
+- Waifu2x now automatically downscales extremely high-resolution images before upscaling to prevent engine failures.
+- This feature auto-downscales only ultra-high-res images that would crash the engine, resizing them to the max supported size to minimize detail loss.
+- Improve code robustness by fixing potential issues that could cause memory leaks and crashes.
+---
+## v3.131.01
+- NEW Model: 1.7 update for AnimeVideo-Mini, sharper and better detail reconstruction.
+- Fix file I/O related issues.
+- Code optimization and cleanup.
+---
+## v3.130.01
+- NEW Feature: [After upscale] - Enable this option to have waifu2x perform video upscaling prior to frame interpolation.
+- Improved speed of adding large numbers of files to the file list
+- Updated method for reading available VRAM size to improve compatibility
+- Optimized code performance
+- Enhanced code reliability
+- Code cleanup and refactoring
+---
+## v3.129.01
+- NEW Model: Omni-Turbo-W2xEX, aims to preserve the quality of the Omni-Small model while boosting speed.
+- NEW Feature: Quick ESRGAN model switch at Home Tab.
+- NEW Model: v1.5 update for the AnimeVideo-Mini-W2xEX model, improved denoising ability.
+- Update ESRGAN models documentation to include AnimeVideo-Mini-W2xEX.
+- Streamline the software startup process.
+---
+## v3.128.01
+- NEW Model: AnimeVideo-Mini-W2xEX, a tiny ESRGAN model trained for fast anime video upscaling while preserving decent detail reconstruction and denoising ability.
+- The anime upscaling quality of this model is significantly better than Anime4K and RTX Super-Res, coming close to AnimeVideoV3.
+- The speed of this new model is similar to Omni-Mini-W2xEX.
+- NEW Feature: Add [Auto Apply] toggle for custom resolution presets. After enabled, while switching presets, the selected preset will be automatically applied to all files in the list.
+- NEW Feature: Add [Default] preset for custom resolution presets, make it easier to switch back to the default custom resolution settings.
+- NEW Feature: Add [Only Keep Failed Files] to the right click menu of [Remove Selected File] button.
+- Improved compatibility with RTX 50 GPUs
+---
 ## v3.127.01
 - NEW Model: V2 update for Omni-Small-W2xEX video upscaling model, featuring better detail reconstruction and deblur capability compare to V1.
 - NEW Feature: Added [Presets] for [Custom Resolution] to allow for quick and easy resolution adjustment.
